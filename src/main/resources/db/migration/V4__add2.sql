@@ -1,0 +1,1 @@
+ALTER TABLE diagnoses ALTER COLUMN diagnosis TYPE TEXT;

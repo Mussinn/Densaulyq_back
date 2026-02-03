@@ -1,0 +1,58 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/med_safe?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Almaty
+    username: postgres
+    password: erke
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: validate
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tmqasqirinventory@gmail.com
+    password: lhvmohlhvtovxykt
+    from: "Noreply <tmqasqirinventory@gmail.com>"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+agora:
+  app-id: 753433eb1ae141cb93c4223272ad4bdd
+  app-certificate: da3b7477054f4c50b352eacaeb72131f
+
+jwt:
+  secret: ${JWT_SECRET:NzQ5dXpKVGkzU0tGVWtOd3FhbHpLZ0pDVjNDUXRBZUtXU3JqSWhBMQ==}
+
+logging:
+  level:
+    # Отключаем логи для конкретных пакетов
+    com.other.package: OFF
+    org.hibernate: ERROR
+    org.springframework: WARN
+
+    # Включаем логи только для вашей части
+    com:
+      example:
+        MedSafe:
+          service: INFO
+
+    # Корневой уровень (при необходимости)
+    root: WARN
+
+# Настройки документации API
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

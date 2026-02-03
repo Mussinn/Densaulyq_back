@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN agora_uid BIGINT UNIQUE;
