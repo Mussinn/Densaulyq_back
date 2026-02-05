@@ -70,14 +70,6 @@ CREATE TABLE appointments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 9. Таблица медикаментов
-CREATE TABLE medications (
-    medication_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    dosage VARCHAR(100),
-    instructions TEXT
-);
-
 -- 10. Таблица тестов (анализов)
 CREATE TABLE tests (
     test_id SERIAL PRIMARY KEY,
@@ -91,12 +83,10 @@ CREATE TABLE tests (
 -- 11. Таблица рецептов
 CREATE TABLE prescriptions (
     prescription_id SERIAL PRIMARY KEY,
-    patient_id INT REFERENCES patients(patient_id) ON DELETE CASCADE,
-    doctor_id INT REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-    medication_id INT REFERENCES medications(medication_id) ON DELETE CASCADE,
+    diagnosis_id INT REFERENCES diagnoses(diagnosis_id) ON DELETE CASCADE,
+    appointment_id INT REFERENCES appointments(appointment_id) ON DELETE CASCADE,
     prescription_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    dosage VARCHAR(100),
-    instructions TEXT
+    callback TEXT
 );
 
 -- 12. Таблица журнала аудита

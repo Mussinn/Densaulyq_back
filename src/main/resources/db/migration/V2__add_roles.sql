@@ -63,21 +63,14 @@ INSERT INTO appointments (patient_id, doctor_id, appointment_date, status, creat
 (5, 2, '2025-05-18 15:00:00', 'scheduled', CURRENT_TIMESTAMP),
 (6, 3, '2025-05-18 16:30:00', 'cancelled', CURRENT_TIMESTAMP);
 
--- 9. Заполнение таблицы medications
-INSERT INTO medications (name, dosage, instructions) VALUES
-('Парацетамол', '500 мг', 'Принимать 1 таблетку каждые 6 часов при температуре'),
-('Амлодипин', '5 мг', 'Принимать 1 таблетку утром при гипертонии'),
-('Омепразол', '20 мг', 'Принимать 1 капсулу утром натощак'),
-('Ибупрофен', '400 мг', 'Принимать 1 таблетку при болях, не чаще 3 раз в день'),
-('Метформин', '500 мг', 'Принимать 1 таблетку 2 раза в день после еды');
-
--- 10. Заполнение таблицы prescriptions
-INSERT INTO prescriptions (patient_id, doctor_id, medication_id, prescription_date, dosage, instructions) VALUES
-(1, 1, 2, CURRENT_TIMESTAMP, '5 мг', '1 таблетка утром'),
-(2, 2, 1, CURRENT_TIMESTAMP, '500 мг', '1 таблетка при температуре'),
-(3, 3, 3, CURRENT_TIMESTAMP, '20 мг', '1 капсула утром'),
-(4, 1, 4, CURRENT_TIMESTAMP, '400 мг', '1 таблетка при мигрени'),
-(5, 2, 5, CURRENT_TIMESTAMP, '500 мг', '1 таблетка 2 раза в день');
+-- -- 9. Заполнение таблицы medications
+-- INSERT INTO medications (name, dosage, instructions) VALUES
+-- ('Парацетамол', '500 мг', 'Принимать 1 таблетку каждые 6 часов при температуре'),
+-- ('Амлодипин', '5 мг', 'Принимать 1 таблетку утром при гипертонии'),
+-- ('Омепразол', '20 мг', 'Принимать 1 капсулу утром натощак'),
+-- ('Ибупрофен', '400 мг', 'Принимать 1 таблетку при болях, не чаще 3 раз в день'),
+-- ('Метформин', '500 мг', 'Принимать 1 таблетку 2 раза в день после еды');
+--
 
 -- 11. Заполнение таблицы tests
 INSERT INTO tests (patient_id, test_name, test_date, result, created_at) VALUES
@@ -86,14 +79,6 @@ INSERT INTO tests (patient_id, test_name, test_date, result, created_at) VALUES
 (3, 'ЭКГ', '2025-05-03 10:00:00', 'Без патологий', CURRENT_TIMESTAMP),
 (4, 'МРТ головы', '2025-05-04 11:00:00', 'Признаки мигрени', CURRENT_TIMESTAMP),
 (5, 'Рентген легких', '2025-05-05 12:00:00', 'Признаки бронхита', CURRENT_TIMESTAMP);
-
--- 12. Заполнение таблицы audit_log
-INSERT INTO audit_log (user_id, action, target_table, target_id, action_date, ip_address) VALUES
-(1, 'Создание диагноза', 'diagnoses', 1, CURRENT_TIMESTAMP, '192.168.1.1'),
-(2, 'Назначение рецепта', 'prescriptions', 1, CURRENT_TIMESTAMP, '192.168.1.2'),
-(3, 'Создание записи', 'medical_records', 1, CURRENT_TIMESTAMP, '192.168.1.3'),
-(4, 'Проведение теста', 'tests', 1, CURRENT_TIMESTAMP, '192.168.1.4'),
-(5, 'Создание записи', 'appointments', 1, CURRENT_TIMESTAMP, '192.168.1.5');
 
 -- 13. Заполнение таблицы security_keys
 INSERT INTO security_keys (user_id, public_key, private_key, created_at) VALUES

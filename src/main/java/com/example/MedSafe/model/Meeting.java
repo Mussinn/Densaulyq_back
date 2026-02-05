@@ -39,3 +39,5 @@ public class Meeting {
     private Integer durationMinutes = 30;
 
 }
+
+

@@ -5,6 +5,7 @@ import com.example.MedSafe.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/meetings")
 @RequiredArgsConstructor
-@Tag(name = "Video Meetings", description = "API для управления видеовстречами")
+@Slf4j
 public class MeetingController {
 
     private final MeetingService meetingService;
@@ -25,6 +26,7 @@ public class MeetingController {
     @Operation(summary = "Создать новую встречу")
     @PostMapping
     public ResponseEntity<Meeting> createMeeting(@RequestBody MeetingService.CreateMeetingRequest request) {
+        log.info("createMeeting called");
         Meeting meeting = meetingService.createMeeting(request);
         return ResponseEntity.ok(meeting);
     }

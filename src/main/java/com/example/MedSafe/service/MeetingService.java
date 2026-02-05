@@ -19,7 +19,7 @@ import java.util.UUID;
 public class MeetingService {
 
     private final MeetingRepository meetingRepository;
-    private final MailService emailService; // Предполагается, что у вас есть сервис для отправки email
+    private final MailService emailService;
 
     // Создание новой встречи
     @Transactional
@@ -28,6 +28,8 @@ public class MeetingService {
         String meetingUrl = "https://meet.jit.si/" + roomId;
 
         Meeting meeting = new Meeting();
+        meeting.setRoomId(roomId);
+        meeting.setPatientEmail(request.getPatientEmail());
         meeting.setAppointmentId(request.getAppointmentId());
         meeting.setDoctorId(request.getDoctorId());
         meeting.setPatientId(request.getPatientId());

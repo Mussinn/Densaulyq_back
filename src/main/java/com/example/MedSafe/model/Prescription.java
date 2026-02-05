@@ -1,6 +1,6 @@
 package com.example.MedSafe.model;
 
-import jakarta.persistence.*;
+import  jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,21 +16,15 @@ public class Prescription {
     private Integer prescriptionId;
 
     @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
-    private Patient patient;
+    @JoinColumn(name = "diagnosis_id", nullable = false)
+    private Diagnosis diagnosis;
 
     @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private Doctor doctor;
-
-    @ManyToOne
-    @JoinColumn(name = "medication_id", nullable = false)
-    private Medication medication;
+    @JoinColumn(name = "appointment_id", nullable = false)
+    private Appointment appointment;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime prescriptionDate = LocalDateTime.now();
 
-    private String dosage;
-
-    private String instructions;
+    private String callback;
 }

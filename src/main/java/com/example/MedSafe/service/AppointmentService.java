@@ -30,8 +30,8 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    public Optional<Appointment> findById(Long id) {
-        return appointmentRepository.findById(Math.toIntExact(id));
+    public Appointment findById(Integer id) {
+        return appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("appointment not found"));
     }
 
     public List<Appointment> findByPatientId(Integer patientId) {

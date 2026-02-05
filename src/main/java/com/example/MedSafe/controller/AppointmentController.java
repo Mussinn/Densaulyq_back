@@ -33,11 +33,9 @@ public class AppointmentController {
 
     // 2. Получить запись по ID
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Integer id) {
         try {
-            return appointmentService.findById(id)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            return ResponseEntity.ok(appointmentService.findById(id));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

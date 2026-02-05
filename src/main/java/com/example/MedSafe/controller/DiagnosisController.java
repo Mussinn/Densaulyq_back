@@ -72,17 +72,11 @@ public class DiagnosisController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getDiagnosesByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<List<Diagnosis>> getDiagnosesByUserId(@PathVariable Integer userId) {
         logger.info("Получен запрос на получение диагнозов для userId={}", userId);
-        try {
-            List<Diagnosis> diagnoses = diagnosisService.getByUserId(userId);
-            logger.info("Успешно возвращено {} диагнозов для userId={}", diagnoses.size(), userId);
-            return ResponseEntity.ok(diagnoses);
-        } catch (Exception e) {
-            logger.error("Ошибка при получении диагнозов для userId={}: {}", userId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve diagnoses for userId " + userId + ": " + e.getMessage());
-        }
+        List<Diagnosis> diagnoses = diagnosisService.getByUserId(userId);
+        logger.info("Успешно возвращено {} диагнозов для userId={}", diagnoses.size(), userId);
+        return ResponseEntity.ok(diagnoses);
     }
 
     @Getter
