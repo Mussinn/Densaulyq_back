@@ -77,7 +77,9 @@ CREATE TABLE tests (
     test_name VARCHAR(255) NOT NULL,
     test_date TIMESTAMP NOT NULL,
     result TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    image_url TEXT,
+    file_url TEXT
 );
 
 -- 11. Таблица рецептов

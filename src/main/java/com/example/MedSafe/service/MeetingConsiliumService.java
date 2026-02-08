@@ -1,7 +1,7 @@
 package com.example.MedSafe.service;
 
-import com.example.MedSafe.model.Meeting;
-import com.example.MedSafe.repository.MeetingRepository;
+import com.example.MedSafe.model.MeetingConsilium;
+import com.example.MedSafe.repository.MeetingConsiliumRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,25 +14,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class MeetingService {
+@RequiredArgsConstructor
+public class MeetingConsiliumService {
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingConsiliumRepository meetingConsiliumRepository;
     private final MailService emailService;
 
     // Создание новой встречи
     @Transactional
-    public Meeting createMeeting(CreateMeetingRequest request) {
+    public MeetingConsilium createMeeting(MeetingConsiliumService.CreateMeetingRequest request) {
         String roomId = generateRoomId(request.getTopic());
         String meetingUrl = "https://meet.jit.si/" + roomId;
 
-        Meeting meeting = new Meeting();
+        MeetingConsilium meeting = new MeetingConsilium();
         meeting.setRoomId(roomId);
-        meeting.setPatientEmail(request.getPatientEmail());
-        meeting.setAppointmentId(request.getAppointmentId());
-        meeting.setDoctorId(request.getDoctorId());
-        meeting.setPatientId(request.getPatientId());
+        meeting.setSenderDoctorId(request.getSenderDoctorId());
+        meeting.setReceiverDoctorId(request.getReceiverDoctorId());
         meeting.setRoomId(roomId);
         meeting.setMeetingUrl(meetingUrl);
         meeting.setTopic(request.getTopic());
@@ -41,13 +39,10 @@ public class MeetingService {
         meeting.setDurationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 30);
 
 
-        Meeting savedMeeting = meetingRepository.save(meeting);
-        log.info("Meeting created with ID: {}", savedMeeting.getId());
+        MeetingConsilium savedMeeting = meetingConsiliumRepository.save(meeting);
 
         // Отправка приглашения пациенту
-        if (request.getPatientEmail() != null && !request.getPatientEmail().trim().isEmpty()) {
-            sendInvitation(savedMeeting);
-        }
+        sendInvitation(savedMeeting, request.getReceiverDoctorEmail());
 
         return savedMeeting;
     }
@@ -65,7 +60,7 @@ public class MeetingService {
     }
 
     // Отправка приглашения
-    private void sendInvitation(Meeting meeting) {
+    private void sendInvitation(MeetingConsilium meeting, String receiverDoctorEmail) {
         try {
             String subject = "Приглашение на видеоконсультацию";
             String body = String.format(
@@ -85,8 +80,8 @@ public class MeetingService {
                     meeting.getScheduledTime(),
                     meeting.getMeetingUrl()
             );
-            sendLink(meeting.getPatientEmail(), subject, body);
-            meetingRepository.save(meeting);
+            sendLink(receiverDoctorEmail, subject, body);
+            meetingConsiliumRepository.save(meeting);
             log.info("Invitation sent for meeting ID: {}", meeting.getId());
         } catch (Exception e) {
             log.error("Failed to send invitation for meeting ID: {}", meeting.getId(), e);
@@ -101,41 +96,45 @@ public class MeetingService {
         }
     }
 
-    // Получение всех встреч доктора
-    public List<Meeting> getDoctorMeetings(Long doctorId) {
-        return meetingRepository.findByDoctorId(doctorId);
+    // Получение всех встреч доктора receiverDoctorId senderDoctorId
+    public List<MeetingConsilium> getDoctorMeetings(Integer senderDoctorId) {
+        return meetingConsiliumRepository.findBySenderDoctorId(senderDoctorId);
+    }
+
+    public List<MeetingConsilium> getReceiverDoctorMeetings(Integer senderDoctorId) {
+        return meetingConsiliumRepository.findByReceiverDoctorId(senderDoctorId);
     }
 
     // Получение активных встреч доктора
-    public List<Meeting> getActiveMeetings(Long doctorId) {
-        return meetingRepository.findActiveByDoctorId(doctorId);
+    public List<MeetingConsilium> getActiveMeetings(Integer doctorId) {
+        return meetingConsiliumRepository.findActiveBySenderDoctorId(doctorId);
     }
 
     // Получение предстоящих встреч
-    public List<Meeting> getUpcomingMeetings(Long doctorId) {
-        return meetingRepository.findUpcomingByDoctorId(doctorId, LocalDateTime.now());
+    public List<MeetingConsilium> getUpcomingMeetings(Integer doctorId) {
+        return meetingConsiliumRepository.findBySenderDoctorIdAndScheduledTimeAfter(doctorId, LocalDateTime.now());
     }
 
     // Поиск встречи по ID
-    public Optional<Meeting> getMeetingById(Long id) {
-        return meetingRepository.findById(id);
+    public Optional<MeetingConsilium> getMeetingById(Integer id) {
+        return meetingConsiliumRepository.findById(id);
     }
 
     // Поиск встречи по roomId
-    public Optional<Meeting> getMeetingByRoomId(String roomId) {
-        return meetingRepository.findByRoomId(roomId);
+    public Optional<MeetingConsilium> getMeetingByRoomId(String roomId) {
+        return meetingConsiliumRepository.findByRoomId(roomId);
     }
 
     // Обновление статуса встречи
     @Transactional
-    public Meeting updateMeetingStatus(Long id, String status) {
-        Meeting meeting = meetingRepository.findById(id)
+    public MeetingConsilium updateMeetingStatus(Integer id, String status) {
+        MeetingConsilium meeting = meetingConsiliumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Meeting not found with id: " + id));
 
         String oldStatus = meeting.getStatus();
         meeting.setStatus(status);
 
-        Meeting updated = meetingRepository.save(meeting);
+        MeetingConsilium updated = meetingConsiliumRepository.save(meeting);
         log.info("Meeting ID: {} status changed from {} to {}", id, oldStatus, status);
 
         return updated;
@@ -143,26 +142,26 @@ public class MeetingService {
 
     // Начать встречу
     @Transactional
-    public Meeting startMeeting(Long id) {
+    public MeetingConsilium startMeeting(Integer id) {
         return updateMeetingStatus(id, "ACTIVE");
     }
 
     // Завершить встречу
     @Transactional
-    public Meeting completeMeeting(Long id) {
+    public MeetingConsilium completeMeeting(Integer id) {
         return updateMeetingStatus(id, "COMPLETED");
     }
 
     // Отменить встречу
     @Transactional
-    public Meeting cancelMeeting(Long id) {
+    public MeetingConsilium cancelMeeting(Integer id) {
         return updateMeetingStatus(id, "CANCELLED");
     }
 
     // Обновление информации о встрече
     @Transactional
-    public Meeting updateMeeting(Long id, UpdateMeetingRequest request) {
-        Meeting meeting = meetingRepository.findById(id)
+    public MeetingConsilium updateMeeting(Integer id, MeetingService.UpdateMeetingRequest request) {
+        MeetingConsilium meeting = meetingConsiliumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Meeting not found with id: " + id));
 
         if (request.getTopic() != null) {
@@ -175,54 +174,48 @@ public class MeetingService {
             meeting.setDurationMinutes(request.getDurationMinutes());
         }
 
-        return meetingRepository.save(meeting);
+        return meetingConsiliumRepository.save(meeting);
     }
 
     // Удаление встречи
     @Transactional
-    public void deleteMeeting(Long id) {
-        if (meetingRepository.existsById(id)) {
-            meetingRepository.deleteById(id);
+    public void deleteMeeting(Integer id) {
+        if (meetingConsiliumRepository.existsById(id)) {
+            meetingConsiliumRepository.deleteById(id);
             log.info("Meeting deleted with ID: {}", id);
         } else {
             throw new RuntimeException("Meeting not found with id: " + id);
         }
     }
 
-    // Отправить приглашение повторно
-    @Transactional
-    public void resendInvitation(Long id) {
-        Meeting meeting = meetingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meeting not found with id: " + id));
-
-        if (meeting.getPatientEmail() != null && !meeting.getPatientEmail().trim().isEmpty()) {
-            sendInvitation(meeting);
-        } else {
-            throw new RuntimeException("Patient email not found for meeting id: " + id);
-        }
-    }
+//    // Отправить приглашение повторно
+//    @Transactional
+//    public void resendInvitation(Long id) {
+//        MeetingConsilium meeting = meetingConsiliumRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Meeting not found with id: " + id));
+//
+//        sendInvitation(meeting);
+//    }
 
     public void shareLink(String meetingUrl, String email) {
-        try{
+        try {
             String subject = "Приглашение на видеоконсультацию";
             String body = String.format(
                     """
-                    Уважаемый пациент,
+                    Уважаемый коллега,
                     
-                    Вам назначена видеоконсультация с доктором.
+                    С вами поделились ссылкой на видеоконсультацию.
                     
-                    Тема: %s
-                    Дата: %s
                     Ссылка для подключения: %s
                     
                     С уважением,
                     Медицинская система MedSafe
-                    """
-                    ,meetingUrl
+                    """,
+                    meetingUrl
             );
             sendLink(email, body, subject);
-        }catch(Exception e){
-
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send invitation for meeting", e);
         }
     }
 
@@ -230,13 +223,13 @@ public class MeetingService {
     @Data
     public static class CreateMeetingRequest {
         private Integer appointmentId;
-        private Integer doctorId;
-        private Integer patientId;
+        private Integer senderDoctorId;
+        private Integer receiverDoctorId;
         private String topic;
         private String description;
         private LocalDateTime scheduledTime;
         private Integer durationMinutes;
-        private String patientEmail;
+            private String receiverDoctorEmail;
     }
 
     // DTO для обновления встречи
@@ -247,4 +240,5 @@ public class MeetingService {
         private LocalDateTime scheduledTime;
         private Integer durationMinutes;
     }
+
 }

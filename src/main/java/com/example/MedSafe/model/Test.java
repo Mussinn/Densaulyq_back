@@ -29,4 +29,8 @@ public class Test {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private String imageUrl;
+
+    private String fileUrl;
 }

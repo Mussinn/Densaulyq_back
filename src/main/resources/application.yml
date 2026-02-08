@@ -56,3 +56,12 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+image:
+  directory:
+    link: "C:/bus/MedSafe/uploads/documents/"
+#  C:\bus\MedSafe\uploads\documents
+#  C:\bus\MedSafe\uploads\images
+file:
+  directory:
+    link: "C:/bus/MedSafe/uploads/images/"
