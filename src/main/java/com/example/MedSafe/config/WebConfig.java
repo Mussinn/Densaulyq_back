@@ -14,7 +14,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**") // Применяем CORS ко всем API-эндпоинтам
-                        .allowedOrigins("http://localhost:5173") // Порт фронтенда
+                        .allowedOrigins("http://localhost:5173", "http://192.168.8.9:5173") // Порт фронтенда
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("Content-Type", "Authorization", "X-Requested-With") // Явно указываем заголовки
                         .allowCredentials(true)

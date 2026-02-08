@@ -23,4 +23,5 @@ public class FileUploadConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + uploadAbsolutePath + "/")
                 .setCachePeriod(3600);
     }
+
 }

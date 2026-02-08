@@ -25,4 +25,8 @@ public class UserService {
         userRepository.deleteById(userId);
         return "Успешное удаление";
     }
+
+    public User findById(Integer currentUserId) {
+        return userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("User not found"));
+    }
 }

@@ -1,3 +1,8 @@
+server:
+  address: 0.0.0.0
+  port: 8080
+
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/densaulyq?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Almaty
@@ -65,3 +70,4 @@ image:
 file:
   directory:
     link: "C:/bus/MedSafe/uploads/images/"
+    messages-dir: "C:/bus/MedSafe/uploads/messages"
