@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -80,6 +79,7 @@ public class TestController {
     public ResponseEntity<List<Test>> getTestsByPatientId(@PathVariable Integer patientId) {
         try {
             List<Test> tests = testService.getTestsByPatientId(patientId);
+            log.info("Получено {} тестов для пациента {}", tests.size(), patientId);
             return ResponseEntity.ok(tests);
         } catch (Exception e) {
             log.error("Ошибка получения тестов для пациента {}: {}", patientId, e.getMessage());
@@ -118,21 +118,36 @@ public class TestController {
             @PathVariable Integer testId,
             @RequestParam(value = "testName", required = false) String testName,
             @RequestParam(value = "result", required = false) String result,
+            @RequestParam(value = "testDate", required = false) String testDateStr,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam(value = "image", required = false) MultipartFile image) {
 
         try {
-            // Получаем существующий тест
-            Test existingTest = testService.getTestById(testId);
+            TestCreateRequest request = new TestCreateRequest();
+            request.setTestName(testName);
+            request.setResult(result);
 
-            // Обновляем поля
-            if (testName != null) existingTest.setTestName(testName);
-            if (result != null) existingTest.setResult(result);
+            // Парсим дату если предоставлена
+            if (testDateStr != null && !testDateStr.trim().isEmpty()) {
+                LocalDateTime testDate;
+                if (testDateStr.endsWith("Z")) {
+                    testDate = LocalDateTime.parse(
+                            testDateStr.substring(0, testDateStr.length() - 1),
+                            DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                    );
+                } else {
+                    testDate = LocalDateTime.parse(testDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+                request.setTestDate(testDate);
+            }
 
-            // Обновляем файлы если предоставлены
-            // Для простоты можно добавить метод updateTest в сервисе
+            request.setFile(file);
+            request.setImage(image);
 
-            return ResponseEntity.ok(existingTest);
+            Test updatedTest = testService.updateTest(testId, request);
+            log.info("Тест обновлен: ID={}", testId);
+
+            return ResponseEntity.ok(updatedTest);
         } catch (Exception e) {
             log.error("Ошибка обновления теста {}: {}", testId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

@@ -3,6 +3,7 @@ package com.example.MedSafe.controller;
 import com.example.MedSafe.model.Doctor;
 import com.example.MedSafe.model.Patient;
 import com.example.MedSafe.model.User;
+import com.example.MedSafe.model.dto.DoctorUpdateRequest;
 import com.example.MedSafe.repository.DoctorRepository;
 import com.example.MedSafe.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/doctor")
@@ -28,6 +28,28 @@ public class DoctorController {
     @GetMapping
     public List<Doctor> findAll() {
         return doctorRepository.findAll();
+    }
+
+    @PutMapping("/update-by-user/{userId}")
+    public ResponseEntity<?> updateDoctorByUserId(@PathVariable Integer userId, @RequestBody DoctorUpdateRequest request) {
+        try {
+            // Найти доктора по userId
+            Doctor doctor = doctorRepository.findByUserUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found for user ID: " + userId));
+
+            // Обновить поля
+            if (request.getSpecialty() != null && !request.getSpecialty().equals("TEMP")) {
+                doctor.setSpecialty(request.getSpecialty());
+            }
+            if (request.getContactNumber() != null && !request.getContactNumber().equals("TEMP")) {
+                doctor.setContactNumber(request.getContactNumber());
+            }
+
+            Doctor updatedDoctor = doctorRepository.save(doctor);
+            return ResponseEntity.ok(updatedDoctor);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/me")

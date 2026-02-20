@@ -111,4 +111,22 @@ CREATE TABLE security_keys (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE payments (
+    payment_id SERIAL PRIMARY KEY,
+    appointment_id INT REFERENCES appointments(appointment_id) ON DELETE CASCADE,
+    amount NUMERIC(10,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'KZT',
+    status VARCHAR(20) CHECK (status IN ('pending','paid','failed','refunded')) DEFAULT 'pending',
+    payment_method VARCHAR(50),
+    transaction_id VARCHAR(255),
+    paid_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+-- V5__update_payments_add_stripe_fields.sql
+
+ALTER TABLE payments
+ADD COLUMN payment_url VARCHAR(500),
+ADD COLUMN stripe_payment_intent_id VARCHAR(255),
+ADD COLUMN stripe_session_id VARCHAR(255),
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

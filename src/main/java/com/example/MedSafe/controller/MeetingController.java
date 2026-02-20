@@ -1,6 +1,7 @@
 package com.example.MedSafe.controller;
 
 import com.example.MedSafe.model.Meeting;
+import com.example.MedSafe.service.AuditService;
 import com.example.MedSafe.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final AuditService auditService;
 
     @Operation(summary = "Создать новую встречу")
     @PostMapping
@@ -35,6 +37,13 @@ public class MeetingController {
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<Meeting>> getDoctorMeetings(@PathVariable Long doctorId) {
         List<Meeting> meetings = meetingService.getDoctorMeetings(doctorId);
+        return ResponseEntity.ok(meetings);
+    }
+
+    @Operation(summary = "Получить все встречи доктора")
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<Meeting>> getPatientMeetings(@PathVariable Long patientId) {
+        List<Meeting> meetings = meetingService.getPatientMeetings(patientId);
         return ResponseEntity.ok(meetings);
     }
 

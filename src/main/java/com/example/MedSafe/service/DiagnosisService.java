@@ -59,6 +59,34 @@ public class DiagnosisService {
         }
     }
 
+    public Diagnosis createDefault(Integer patientId, Integer recordId, String diagnosisText) throws Exception {
+        logger.info("Начало метода createEncryptedDiagnosis с параметрами: patientId={}, recordId={}, diagnosisText={}",
+                patientId, recordId, diagnosisText);
+
+        try {
+            Patient patient = patientRepository.findById(patientId)
+                    .orElseThrow(() -> new IllegalArgumentException("Patient with ID " + patientId + " not found"));
+
+            MedicalRecord record = medicalRecordRepository.findById(recordId)
+                    .orElseThrow(() -> new IllegalArgumentException("Medical record with ID " + recordId + " not found"));
+
+            SecurityKey securityKey = securityKeyRepository.findByUserUserId(patient.getUser().getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("Security key not found for user ID " + patient.getUser().getUserId()));
+
+            logger.info("Перед шифрованием для patientId={}, recordId={}", patientId, recordId);
+//            String encryptedDiagnosis = encryptWithPublicKey(diagnosisText, securityKey.getPublicKey());
+
+            Diagnosis diagnosis = new Diagnosis(record, diagnosisText, java.time.LocalDate.now());
+            Diagnosis savedDiagnosis = diagnosisRepository.save(diagnosis);
+            logger.info("Диагноз успешно сохранен: diagnosisId={}, encryptedDiagnosis={}", savedDiagnosis.getDiagnosisId(), savedDiagnosis.getDiagnosis());
+            return savedDiagnosis;
+        } catch (Exception e) {
+            logger.error("Ошибка при создании зашифрованного диагноза: {}", e.getMessage(), e);
+            throw e; // Передаем исключение дальше для обработки контроллером
+        }
+    }
+
+
     public String decryptDiagnosis(String encryptedDiagnosis, String privateKey) throws Exception {
         logger.info("Начало метода decryptDiagnosis с параметрами: encryptedDiagnosis={}, privateKey={}",
                 encryptedDiagnosis, privateKey.substring(0, Math.min(50, privateKey.length())) + "...");
@@ -175,6 +203,18 @@ public class DiagnosisService {
             return diagnoses;
         } catch (Exception e) {
             logger.error("Ошибка при получении диагнозов для userId={}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve diagnoses by userId: " + e.getMessage(), e);
+        }
+    }
+
+    public List<Diagnosis> getByPatientId(Integer patientId) {
+        logger.info("Начало метода getByPatientId с параметром: patientId={}", patientId);
+        try {
+            List<Diagnosis> diagnoses = diagnosisRepository.findByPatientId(patientId);
+            logger.info("Найдено {} диагнозов для patientId={}", diagnoses.size(), patientId);
+            return diagnoses;
+        } catch (Exception e) {
+            logger.error("Ошибка при получении диагнозов для patientId={}: {}", patientId, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve diagnoses by userId: " + e.getMessage(), e);
         }
     }

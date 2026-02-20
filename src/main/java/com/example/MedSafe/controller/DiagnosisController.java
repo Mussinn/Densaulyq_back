@@ -40,6 +40,26 @@ public class DiagnosisController {
                     .body("Failed to create diagnosis: " + e.getMessage());
         }
     }
+    @PostMapping("/create/bot")
+    public ResponseEntity<?> createDiagnosisBot(@RequestBody DiagnosisRequest request) {
+        logger.info("Получен запрос на создание диагноза: patientId={}, recordId={}, diagnosisText={}",
+                request.getPatientId(), request.getRecordId(), request.getDiagnosisText());
+
+        try {
+            Diagnosis diagnosis = diagnosisService.createDefault(
+                    request.getPatientId(),
+                    request.getRecordId(),
+                    request.getDiagnosisText()
+            );
+            logger.info("Диагноз успешно создан: diagnosisId={}", diagnosis.getDiagnosisId());
+            return ResponseEntity.ok(diagnosis);
+        } catch (Exception e) {
+            logger.error("Ошибка при создании диагноза: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create diagnosis: " + e.getMessage());
+        }
+    }
+
 
     @PostMapping("/decrypt")
     public ResponseEntity<?> decryptDiagnosis(@RequestBody DecryptRequest request) {
@@ -78,6 +98,15 @@ public class DiagnosisController {
         logger.info("Успешно возвращено {} диагнозов для userId={}", diagnoses.size(), userId);
         return ResponseEntity.ok(diagnoses);
     }
+
+    @GetMapping("/{patientId}/patient")
+    public ResponseEntity<List<Diagnosis>> getDiagnosesByPatientId(@PathVariable Integer patientId) {
+        logger.info("Получен запрос на получение диагнозов для patientId={}", patientId);
+        List<Diagnosis> diagnoses = diagnosisService.getByPatientId(patientId);
+        logger.info("Успешно возвращено {} диагнозов для patientId={}", diagnoses.size(), patientId);
+        return ResponseEntity.ok(diagnoses);
+    }
+
 
     @Getter
     @Setter

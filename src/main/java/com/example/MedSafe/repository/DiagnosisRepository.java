@@ -22,4 +22,11 @@ public interface DiagnosisRepository extends JpaRepository<Diagnosis, Integer> {
             nativeQuery = true)
     List<Diagnosis> findByUserId(@Param("userId") Integer userId);
 
+    @Query(value = "SELECT d.* FROM diagnoses d " +
+            "JOIN medical_records mr ON d.record_id = mr.record_id " +
+            "JOIN patients p ON mr.patient_id = p.patient_id " +
+            "WHERE mr.patient_id = :patientId",
+            nativeQuery = true)
+    List<Diagnosis> findByPatientId(@Param("patientId") Integer patientId);
+
 }

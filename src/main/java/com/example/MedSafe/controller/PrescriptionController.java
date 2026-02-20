@@ -21,8 +21,7 @@ public class PrescriptionController {
         return prescriptionService.findByDiagnosisId(diagnosesId);
     }
 
-
-    @GetMapping("{appointmentId}")
+    @GetMapping("{appointmentId}/appointment")
     public List<Prescription> findByAppointmentId(@PathVariable Integer appointmentId) {
         return prescriptionService.findByAppointmentId(appointmentId);
     }
@@ -30,5 +29,10 @@ public class PrescriptionController {
     @PostMapping
     public Prescription save(@RequestBody PrescriptionRequest request) {
         return prescriptionService.save(request);
+    }
+
+    @GetMapping("/{patientId}/patient")
+    public List<Prescription> findByPatientId(@PathVariable Integer patientId) {
+        return prescriptionService.findByDiagnosisMedicalRecordPatientPatientId(patientId);
     }
 }

@@ -3,6 +3,7 @@ package com.example.MedSafe.controller;
 import com.example.MedSafe.model.MedicalRecord;
 import com.example.MedSafe.model.Patient;
 import com.example.MedSafe.model.User;
+import com.example.MedSafe.model.dto.PatientUpdateRequest;
 import com.example.MedSafe.repository.MedicalRecordRepository;
 import com.example.MedSafe.repository.PatientRepository;
 import com.example.MedSafe.service.UserService;
@@ -12,12 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/patient")
@@ -32,6 +31,34 @@ public class PatientController {
     @GetMapping
     public ResponseEntity<List<Patient>> getPatientByDoctorId() {
         return ResponseEntity.ok(patientRepository.findAll());
+    }
+
+    @PutMapping("/update-by-user/{userId}")
+    public ResponseEntity<?> updatePatientByUserId(@PathVariable Integer userId, @RequestBody PatientUpdateRequest request) {
+        try {
+            // Найти пациента по userId
+            Patient patient = patientRepository.findByUserUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Patient not found for user ID: " + userId));
+
+            // Обновить поля
+            if (request.getDateOfBirth() != null) {
+                patient.setDateOfBirth(request.getDateOfBirth());
+            }
+            if (request.getGender() != null && !request.getGender().equals("male")) {
+                patient.setGender(request.getGender());
+            }
+            if (request.getContactNumber() != null && !request.getContactNumber().equals("TEMP")) {
+                patient.setContactNumber(request.getContactNumber());
+            }
+            if (request.getAddress() != null && !request.getAddress().equals("TEMP0")) {
+                patient.setAddress(request.getAddress());
+            }
+
+            Patient updatedPatient = patientRepository.save(patient);
+            return ResponseEntity.ok(updatedPatient);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/medical-record/{patientId}")

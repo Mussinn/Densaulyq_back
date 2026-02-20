@@ -24,9 +24,9 @@ public class MeetingService {
     // Создание новой встречи
     @Transactional
     public Meeting createMeeting(CreateMeetingRequest request) {
+
         String roomId = generateRoomId(request.getTopic());
         String meetingUrl = "https://meet.jit.si/" + roomId;
-
         Meeting meeting = new Meeting();
         meeting.setRoomId(roomId);
         meeting.setPatientEmail(request.getPatientEmail());
@@ -104,6 +104,10 @@ public class MeetingService {
     // Получение всех встреч доктора
     public List<Meeting> getDoctorMeetings(Long doctorId) {
         return meetingRepository.findByDoctorId(doctorId);
+    }
+
+    public List<Meeting> getPatientMeetings(Long doctorId) {
+        return meetingRepository.findByPatientId(doctorId);
     }
 
     // Получение активных встреч доктора

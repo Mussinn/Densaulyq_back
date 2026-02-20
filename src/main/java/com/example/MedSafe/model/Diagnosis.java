@@ -1,6 +1,7 @@
 package com.example.MedSafe.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public class Diagnosis {
     private MedicalRecord medicalRecord;
 
     @Column(nullable = false, columnDefinition = "TEXT")
+    @Size(max = 1000)
     private String diagnosis;
 
     @Column(nullable = false)

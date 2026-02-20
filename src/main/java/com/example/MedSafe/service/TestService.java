@@ -32,7 +32,11 @@ public class TestService {
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
 
-    @Value("${file.base-url:C:/bus/MedSafe}")
+    @Value("${server.port:8080}")
+    private String serverPort;
+
+    // URL для доступа к файлам (можно настроить в application.properties)
+    @Value("${file.base-url:http://localhost:8080}")
     private String baseUrl;
 
     @Transactional
@@ -66,30 +70,12 @@ public class TestService {
         test.setImageUrl(imageUrl);
         test.setCreatedAt(LocalDateTime.now());
 
-        return testRepository.save(test);
-    }
+        Test savedTest = testRepository.save(test);
+        log.info("Тест создан успешно: ID={}, FileURL={}, ImageURL={}",
+                savedTest.getTestId(), fileUrl, imageUrl);
 
-//    private String saveImageToDisk(MultipartFile file) {
-//        String uploadDir = UPLOAD_DIR;
-//        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-//        Path filePath = Paths.get(uploadDir + fileName);
-//
-//        try {
-//            // Создаем директорию, если она не существует
-//            Path directoryPath = Paths.get(uploadDir);
-//            if (!Files.exists(directoryPath)) {
-//                Files.createDirectories(directoryPath);
-//            }
-//
-//            // Копируем файл в целевую директорию
-//            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//            return filePath.toString().replace("\\", "/");
-//
-//        } catch (Exception e) {
-//            logger.error("Ошибка при сохранении изображения на диск: {}", e.getMessage(), e);
-//            throw new FailedToAddImageException("Не удалось сохранить изображение на диск.");
-//        }
-//    }
+        return savedTest;
+    }
 
     private void createUploadDirectories() throws IOException {
         Path rootPath = Paths.get(uploadDir);
@@ -98,19 +84,27 @@ public class TestService {
 
         if (!Files.exists(rootPath)) {
             Files.createDirectories(rootPath);
+            log.info("Создана директория: {}", rootPath.toAbsolutePath());
         }
         if (!Files.exists(documentsPath)) {
             Files.createDirectories(documentsPath);
+            log.info("Создана директория: {}", documentsPath.toAbsolutePath());
         }
         if (!Files.exists(imagesPath)) {
             Files.createDirectories(imagesPath);
+            log.info("Создана директория: {}", imagesPath.toAbsolutePath());
         }
     }
 
     private String saveFile(MultipartFile file, String subdirectory) throws IOException {
         // Генерируем уникальное имя файла
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String fileExtension = "";
+
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
         String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
 
         // Путь для сохранения
@@ -119,8 +113,10 @@ public class TestService {
         // Копируем файл
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Возвращаем URL для доступа к файлу
-        return baseUrl + "/uploads/" + subdirectory + "/" + uniqueFilename;
+        log.info("Файл сохранен: {}", targetPath.toAbsolutePath());
+
+        // Возвращаем URL для доступа к файлу через API
+        return baseUrl + "/api/v1/files/" + subdirectory + "/" + uniqueFilename;
     }
 
     public List<Test> getTestsByPatientId(Integer patientId) {
@@ -145,20 +141,71 @@ public class TestService {
         }
 
         testRepository.delete(test);
+        log.info("Тест удален: ID={}", testId);
     }
 
     private void deleteFileFromUrl(String fileUrl) throws IOException {
-        // Извлекаем имя файла из URL
-        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+        try {
+            // Извлекаем путь файла из URL
+            // Пример: http://localhost:8080/api/v1/files/documents/uuid.pdf
+            String[] parts = fileUrl.split("/");
+            if (parts.length < 2) {
+                log.warn("Неверный формат URL файла: {}", fileUrl);
+                return;
+            }
 
-        // Определяем поддиректорию по типу файла
-        String subdirectory = fileUrl.contains("/documents/") ? "documents" : "images";
+            String filename = parts[parts.length - 1];
+            String subdirectory = parts[parts.length - 2];
 
-        Path filePath = Paths.get(uploadDir, subdirectory, fileName);
+            Path filePath = Paths.get(uploadDir, subdirectory, filename);
 
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
-            log.info("Файл удален: {}", filePath);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Файл удален: {}", filePath.toAbsolutePath());
+            } else {
+                log.warn("Файл не найден для удаления: {}", filePath.toAbsolutePath());
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при удалении файла: {}", fileUrl, e);
         }
+    }
+
+    @Transactional
+    public Test updateTest(Integer testId, TestCreateRequest request) throws IOException {
+        Test existingTest = getTestById(testId);
+
+        // Обновляем текстовые поля
+        if (request.getTestName() != null) {
+            existingTest.setTestName(request.getTestName());
+        }
+        if (request.getResult() != null) {
+            existingTest.setResult(request.getResult());
+        }
+        if (request.getTestDate() != null) {
+            existingTest.setTestDate(request.getTestDate());
+        }
+
+        // Обновляем файлы если предоставлены
+        if (request.getFile() != null && !request.getFile().isEmpty()) {
+            // Удаляем старый файл
+            if (existingTest.getFileUrl() != null) {
+                deleteFileFromUrl(existingTest.getFileUrl());
+            }
+            // Сохраняем новый
+            String newFileUrl = saveFile(request.getFile(), "documents");
+            existingTest.setFileUrl(newFileUrl);
+        }
+
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            // Удаляем старое изображение
+            if (existingTest.getImageUrl() != null) {
+                deleteFileFromUrl(existingTest.getImageUrl());
+            }
+            // Сохраняем новое
+            String newImageUrl = saveFile(request.getImage(), "images");
+            existingTest.setImageUrl(newImageUrl);
+        }
+
+        return testRepository.save(existingTest);
     }
 }

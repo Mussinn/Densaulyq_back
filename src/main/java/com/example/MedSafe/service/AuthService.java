@@ -29,12 +29,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
-
-    // Добавлено: инжектируем CallService для управления онлайн-статусом
     private final CallService callService;
 
-    public User registerUser(String username, String password, String email, String firstName, String lastName, Integer roleId) {
-        logger.info("Регистрация пользователя: username={}", username);
+    public User registerUser(
+            String username,
+            String password,
+            String email,
+            String firstName,
+            String lastName,
+            Integer roleId,
+            String specialty,
+            String contactNumber,
+            String address,
+            String gender) {
+
+        logger.info("Регистрация пользователя: username={}, roleId={}", username, roleId);
+
         if (userRepository.existsByUsername(username)) {
             logger.error("Имя пользователя {} уже занято", username);
             throw new RuntimeException("Username already taken");
@@ -42,10 +52,11 @@ public class AuthService {
 
         Role userRole = roleRepository.findById(roleId)
                 .orElseThrow(() -> {
-                    logger.error("Роль ROLE_USER не найдена");
-                    return new RuntimeException("Default role not found");
+                    logger.error("Роль с ID {} не найдена", roleId);
+                    return new RuntimeException("Role not found");
                 });
 
+        // Создаем основного пользователя
         User user = new User();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
@@ -57,21 +68,46 @@ public class AuthService {
         user.setRoles(Collections.singleton(userRole));
 
         User savedUser = userRepository.save(user);
-        logger.info("userRoleId" + userRole.getRoleId());
-        if (userRole.getRoleId() == 2) {
-//            (User user, LocalDate dateOfBirth, String gender, String contactNumber, String address, LocalDateTime createdAt)
-            doctorRepository.save(new Doctor(savedUser, "TEMP", "TEMP", LocalDateTime.now()));
-        } else if (userRole.getRoleId() == 3) {
-//            (User user, String specialty, String contactNumber, LocalDateTime createdAt)
-            patientRepository.save(new Patient(savedUser, LocalDate.now(), "male", "TEMP", "TEMP0", LocalDateTime.now()));
+        logger.info("Пользователь сохранен: userId={}, roleId={}", savedUser.getUserId(), roleId);
+
+        // Создаем дополнительную запись в зависимости от роли
+        try {
+            if (roleId == 2) {
+                // Доктор
+                logger.info("Создание записи доктора для userId={}", savedUser.getUserId());
+                Doctor doctor = new Doctor(
+                        savedUser,
+                        specialty != null ? specialty : "Не указана",
+                        contactNumber != null ? contactNumber : "",
+                        LocalDateTime.now()
+                );
+                doctorRepository.save(doctor);
+                logger.info("Запись доктора успешно создана");
+
+            } else if (roleId == 3) {
+                // Пациент
+                logger.info("Создание записи пациента для userId={}", savedUser.getUserId());
+                Patient patient = new Patient(
+                        savedUser,
+                        LocalDate.now(), // По умолчанию текущая дата, будет обновлена позже если нужно
+                        gender != null ? gender : "other",
+                        contactNumber != null ? contactNumber : "",
+                        address != null ? address : "",
+                        LocalDateTime.now()
+                );
+                patientRepository.save(patient);
+                logger.info("Запись пациента успешно создана");
+            }
+        } catch (Exception e) {
+            logger.error("Ошибка при создании дополнительной записи для роли {}: {}", roleId, e.getMessage(), e);
+            // Не прерываем регистрацию, основной пользователь уже создан
         }
 
-        // Добавлено: автоматически помечаем пользователя как онлайн при регистрации
+        // Устанавливаем онлайн-статус
         try {
             markUserAsOnline(savedUser);
         } catch (Exception e) {
             logger.warn("Не удалось установить онлайн-статус при регистрации: {}", e.getMessage());
-            // Не прерываем регистрацию из-за этого
         }
 
         logger.info("Пользователь успешно зарегистрирован: userId={}", savedUser.getUserId());
@@ -91,12 +127,10 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Добавлено: помечаем пользователя как онлайн при успешном входе
         try {
             markUserAsOnline(user);
         } catch (Exception e) {
             logger.warn("Не удалось установить онлайн-статус при входе: {}", e.getMessage());
-            // Не прерываем вход из-за этого
         }
 
         logger.info("Успешный вход по паролю: userId={}", user.getUserId());
@@ -117,12 +151,10 @@ public class AuthService {
                     return new RuntimeException("Security key not found");
                 });
 
-        // Генерация случайного сообщения для подписи
         String challenge = UUID.randomUUID().toString();
         logger.debug("Сгенерировано случайное сообщение для подписи: {}", challenge);
 
         try {
-            // Подготовка приватного ключа
             String privateKeyContent = privateKey
                     .replaceAll("\\n", "")
                     .replace("-----BEGIN PRIVATE KEY-----", "")
@@ -138,17 +170,14 @@ public class AuthService {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PrivateKey parsedPrivateKey = keyFactory.generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(privateBytes));
 
-            // Подпись сообщения с помощью приватного ключа
             Signature signer = Signature.getInstance("SHA256withRSA");
             signer.initSign(parsedPrivateKey);
             signer.update(challenge.getBytes());
             byte[] signature = signer.sign();
 
-            // Подготовка публичного ключа
             byte[] publicBytes = Base64.getDecoder().decode(securityKey.getPublicKey());
             PublicKey publicKey = keyFactory.generatePublic(new java.security.spec.X509EncodedKeySpec(publicBytes));
 
-            // Проверка подписи с помощью публичного ключа
             Signature verifier = Signature.getInstance("SHA256withRSA");
             verifier.initVerify(publicKey);
             verifier.update(challenge.getBytes());
@@ -159,12 +188,10 @@ public class AuthService {
                 throw new RuntimeException("Invalid private key");
             }
 
-            // Добавлено: помечаем пользователя как онлайн при успешном входе по ключу
             try {
                 markUserAsOnline(user);
             } catch (Exception e) {
                 logger.warn("Не удалось установить онлайн-статус при входе по ключу: {}", e.getMessage());
-                // Не прерываем вход из-за этого
             }
 
             logger.info("Успешный вход по приватному ключу: userId={}", user.getUserId());
@@ -175,16 +202,13 @@ public class AuthService {
         }
     }
 
-    // Добавлено: новый вспомогательный метод для установки онлайн-статуса
     private void markUserAsOnline(User user) {
         try {
             String userId = user.getUserId().toString();
             String sessionId = "auth-session-" + userId + "-" + UUID.randomUUID().toString().substring(0, 8);
 
-            // 1. Регистрируем в CallService
             callService.registerUser(userId, sessionId);
 
-            // 2. Обновляем статус в базе данных
             user.setOnline(true);
             userRepository.save(user);
 
@@ -193,19 +217,15 @@ public class AuthService {
         } catch (Exception e) {
             logger.error("Ошибка при установке онлайн-статуса для пользователя {}: {}",
                     user.getUserId(), e.getMessage());
-            // Не пробрасываем исключение дальше, чтобы не ломать основной процесс
         }
     }
 
-    // Добавлено: новый метод для выхода пользователя (опционально)
     public void logoutUser(Integer userId) {
         try {
             String userIdStr = userId.toString();
 
-            // 1. Убираем из CallService
             callService.unregisterUser(userIdStr);
 
-            // 2. Обновляем статус в базе данных
             userRepository.findById(userId).ifPresent(user -> {
                 user.setOnline(false);
                 userRepository.save(user);

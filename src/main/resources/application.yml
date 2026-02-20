@@ -64,10 +64,13 @@ springdoc:
 
 image:
   directory:
-    link: "C:/bus/MedSafe/uploads/documents/"
-#  C:\bus\MedSafe\uploads\documents
-#  C:\bus\MedSafe\uploads\images
+    link: "C:/bus/MedSafe/uploads/images/"
+
 file:
   directory:
-    link: "C:/bus/MedSafe/uploads/images/"
+    link: "C:/bus/MedSafe/uploads/documents/"
     messages-dir: "C:/bus/MedSafe/uploads/messages"
+  # ВАЖНО: Добавьте эти две строки!
+  base-url: "http://localhost:8080"
+  upload-dir: "C:/bus/MedSafe/uploads"
+

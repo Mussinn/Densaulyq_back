@@ -39,4 +39,9 @@ public class PrescriptionService {
         newPrescription.setCallback(request.getCallback());
         return prescriptionRepository.save(newPrescription);
     }
+
+    public List<Prescription> findByDiagnosisMedicalRecordPatientPatientId(Integer id) {
+        log.info("findByDiagnosisMedicalRecordPatientPatientId:{}", id);
+        return prescriptionRepository.findByDiagnosisMedicalRecordPatientPatientId(id);
+    }
 }
