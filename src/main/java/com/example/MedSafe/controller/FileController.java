@@ -79,6 +79,12 @@ public class FileController {
         return downloadFile(filename, "documents");
     }
 
+    @Operation(summary = "Скачать документ")
+    @GetMapping("/messages/{filename:.+}")
+    public ResponseEntity<Resource> downloadMessages(@PathVariable String filename) {
+        return downloadFile(filename, "documents");
+    }
+
     @Operation(summary = "Скачать изображение")
     @GetMapping("/images/{filename:.+}")
     public ResponseEntity<Resource> downloadImage(@PathVariable String filename) {

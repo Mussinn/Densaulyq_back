@@ -70,7 +70,7 @@ public class MessageService {
         if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
             for (MultipartFile file : request.getAttachments()) {
                 try {
-                    String fileName = fileStorageService.saveFile(file);
+                    String fileName = fileStorageService.saveFileV2(file);
 
                     MessageAttachment attachment = MessageAttachment.builder()
                             .message(message)

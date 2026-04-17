@@ -14,8 +14,39 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
+    // URL для доступа к файлам (можно настроить в application.properties)
+    @Value("${file.base-url:http://localhost:8080}")
+    private String baseUrl;
+
     @Value("${file.messages-dir:uploads/messages}")
     private String messagesDir;
+
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
+
+
+    public String saveFileV2(MultipartFile file) throws IOException {
+
+        String subdirectory = "messages";
+        // Генерируем уникальное имя файла
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = "";
+
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+        // Путь для сохранения
+        Path targetPath = Paths.get(uploadDir, subdirectory, uniqueFilename);
+
+        // Копируем файл
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Возвращаем URL для доступа к файлу через API
+        return baseUrl + "/api/v1/files/" + subdirectory + "/" + uniqueFilename;
+    }
 
     public String saveFile(MultipartFile file) throws IOException {
         // Создаем директорию если не существует

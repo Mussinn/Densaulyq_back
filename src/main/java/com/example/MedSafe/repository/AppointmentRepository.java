@@ -47,4 +47,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     // 6. Подсчитать записи по статусу
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.status = :scheduled")
     long countByStatus(@Param("scheduled") String scheduled);
+
 }

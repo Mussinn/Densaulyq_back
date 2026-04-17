@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/prescription")
+@RequestMapping("/api/v1/prescription")
 @RequiredArgsConstructor
 public class PrescriptionController {
     private final PrescriptionService prescriptionService;
