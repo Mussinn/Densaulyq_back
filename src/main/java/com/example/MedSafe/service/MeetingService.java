@@ -37,7 +37,7 @@ public class MeetingService {
         meeting.setMeetingUrl(meetingUrl);
         meeting.setTopic(request.getTopic());
         meeting.setStatus("SCHEDULED");
-        meeting.setScheduledTime(request.getScheduledTime() != null ? request.getScheduledTime() : LocalDateTime.now().plusHours(1));
+        meeting.setScheduledTime(request.getScheduledTime() != null ? request.getScheduledTime() : LocalDateTime.now().plusHours(0));
         meeting.setDurationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 30);
 
 
@@ -67,19 +67,19 @@ public class MeetingService {
     // Отправка приглашения
     private void sendInvitation(Meeting meeting) {
         try {
-            String subject = "Приглашение на видеоконсультацию";
+            String subject = "Бейнеконсультацияға шақыру";
             String body = String.format(
                     """
-                    Уважаемый пациент,
+                    Құрметті пациент,
                     
-                    Вам назначена видеоконсультация с доктором.
+                    Сізге дәрігермен бейнеконсультация тағайындалды.
                     
-                    Тема: %s
-                    Дата: %s
-                    Ссылка для подключения: %s
+                    Тақырып: %s
+                    Күні: %s
+                    Қосылу сілтемесі: %s
                     
-                    С уважением,
-                    Медицинская система MedSafe
+                    Құрметпен,
+                    MedSafe медициналық жүйесі
                     """,
                     meeting.getTopic(),
                     meeting.getScheduledTime(),
@@ -87,9 +87,9 @@ public class MeetingService {
             );
             sendLink(meeting.getPatientEmail(), subject, body);
             meetingRepository.save(meeting);
-            log.info("Invitation sent for meeting ID: {}", meeting.getId());
+            log.info("Meeting ID үшін шақыру жіберілді: {}", meeting.getId());
         } catch (Exception e) {
-            log.error("Failed to send invitation for meeting ID: {}", meeting.getId(), e);
+            log.error("Meeting ID үшін шақыру жіберу сәтсіз аяқталды: {}", meeting.getId(), e);
         }
     }
 

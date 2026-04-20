@@ -30,6 +30,7 @@ public class AuthService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final CallService callService;
+    private final MedicalRecordRepository medicalRecordRepository;
 
     public User registerUser(
             String username,
@@ -95,7 +96,9 @@ public class AuthService {
                         address != null ? address : "",
                         LocalDateTime.now()
                 );
-                patientRepository.save(patient);
+                Patient patient1 = patientRepository.save(patient);
+                MedicalRecord medicalRecord = new MedicalRecord(patient1);
+                medicalRecordRepository.save(medicalRecord);
                 logger.info("Запись пациента успешно создана");
             }
         } catch (Exception e) {

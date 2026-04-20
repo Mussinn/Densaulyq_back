@@ -23,4 +23,8 @@ public class MedicalRecord {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public MedicalRecord(Patient patient) {
+        this.patient = patient;
+    }
 }

@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/densaulyq?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Almaty
     username: postgres
-    password: erke
+    password:
     driver-class-name: org.postgresql.Driver
 
   jpa:
