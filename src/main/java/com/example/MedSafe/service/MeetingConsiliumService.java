@@ -62,19 +62,19 @@ public class MeetingConsiliumService {
     // Отправка приглашения
     private void sendInvitation(MeetingConsilium meeting, String receiverDoctorEmail) {
         try {
-            String subject = "Приглашение на видеоконсультацию";
+            String subject = "Бейне-консультацияға шақыру";
             String body = String.format(
                     """
-                    Уважаемый пациент,
+                    Құрметті пациент,
                     
-                    Вам назначена видеоконсультация с доктором.
+                    Сізге дәрігермен бейне-консультация тағайындалды.
                     
-                    Тема: %s
-                    Дата: %s
-                    Ссылка для подключения: %s
+                    Тақырыбы: %s
+                    Күні: %s
+                    Қосылу сілтемесі: %s
                     
-                    С уважением,
-                    Медицинская система MedSafe
+                    Құрметпен,
+                    MedSafe медициналық жүйесі
                     """,
                     meeting.getTopic(),
                     meeting.getScheduledTime(),
